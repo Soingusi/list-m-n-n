@@ -55,7 +55,8 @@
   <p>Hãy góp món ăn lành mạnh bạn yêu thích 👇</p>
   <input id="nickname" placeholder="Tên của bạn" /><br/>
   <input id="food" placeholder="Tên món ăn lành mạnh" /><br/>
-  <input id="hashtags" placeholder="Hashtag (cách nhau bằng khoảng trắng, ví dụ: #ăn-chay #salad)" /><br/>
+  <input id="calo" placeholder="Số calo ước tính (vd: 250)" /><br/>
+  <input id="hashtags" placeholder="Hashtag (vd: #ăn-chay #salad)" /><br/>
   <input id="imageUrl" placeholder="Link hình ảnh món ăn (tùy chọn)" /><br/>
   <button onclick="submitFood()">Góp món</button>
 
@@ -65,7 +66,6 @@
   <h2>📋 Danh sách món ăn</h2>
   <ul id="foodList"></ul>
 
-  <!-- Firebase SDK -->
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
   <script>
@@ -85,6 +85,7 @@
     async function submitFood() {
       const nickname = document.getElementById("nickname").value.trim();
       const food = document.getElementById("food").value.trim();
+      const calo = document.getElementById("calo").value.trim();
       const hashtags = document.getElementById("hashtags").value.trim();
       const imageUrl = document.getElementById("imageUrl").value.trim();
       if (!nickname || !food) {
@@ -104,12 +105,14 @@
       await db.collection("healthyFoods").add({
         nickname,
         food,
+        calo,
         hashtags,
         imageUrl,
         createdAt: new Date()
       });
 
       document.getElementById("food").value = "";
+      document.getElementById("calo").value = "";
       document.getElementById("hashtags").value = "";
       document.getElementById("imageUrl").value = "";
       loadFoods();
@@ -125,6 +128,9 @@
         if (!searchTag || (data.hashtags && data.hashtags.toLowerCase().includes(searchTag))) {
           const li = document.createElement("li");
           li.innerHTML = `<strong>${data.nickname}</strong>: ${data.food}`;
+          if (data.calo) {
+            li.innerHTML += ` - <em>${data.calo} calo</em>`;
+          }
           if (data.hashtags) {
             li.innerHTML += `<br/><span class="hashtags">${data.hashtags}</span>`;
           }
