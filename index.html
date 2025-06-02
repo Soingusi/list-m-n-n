@@ -59,6 +59,9 @@
   <input id="imageUrl" placeholder="Link hình ảnh món ăn (tùy chọn)" /><br/>
   <button onclick="submitFood()">Góp món</button>
 
+  <h2>🔍 Tìm kiếm theo Hashtag</h2>
+  <input id="searchTag" placeholder="Nhập hashtag cần tìm, ví dụ: #salad" oninput="loadFoods()" />
+
   <h2>📋 Danh sách món ăn</h2>
   <ul id="foodList"></ul>
 
@@ -114,19 +117,22 @@
 
     async function loadFoods() {
       const listEl = document.getElementById("foodList");
+      const searchTag = document.getElementById("searchTag").value.trim().toLowerCase();
       listEl.innerHTML = "";
       const snapshot = await db.collection("healthyFoods").orderBy("createdAt", "desc").get();
       snapshot.forEach(doc => {
         const data = doc.data();
-        const li = document.createElement("li");
-        li.innerHTML = `<strong>${data.nickname}</strong>: ${data.food}`;
-        if (data.hashtags) {
-          li.innerHTML += `<br/><span class="hashtags">${data.hashtags}</span>`;
+        if (!searchTag || (data.hashtags && data.hashtags.toLowerCase().includes(searchTag))) {
+          const li = document.createElement("li");
+          li.innerHTML = `<strong>${data.nickname}</strong>: ${data.food}`;
+          if (data.hashtags) {
+            li.innerHTML += `<br/><span class="hashtags">${data.hashtags}</span>`;
+          }
+          if (data.imageUrl) {
+            li.innerHTML += `<br/><img src="${data.imageUrl}" alt="${data.food}" />`;
+          }
+          listEl.appendChild(li);
         }
-        if (data.imageUrl) {
-          li.innerHTML += `<br/><img src="${data.imageUrl}" alt="${data.food}" />`;
-        }
-        listEl.appendChild(li);
       });
     }
 
