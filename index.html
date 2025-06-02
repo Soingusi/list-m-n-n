@@ -1,0 +1,136 @@
+
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bếp Ăn Lành Mạnh</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0fff4;
+      padding: 20px;
+      color: #333;
+    }
+    h1 {
+      color: #2f855a;
+    }
+    input, button, textarea {
+      padding: 10px;
+      margin: 5px 0;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #48bb78;
+      color: white;
+      cursor: pointer;
+      width: auto;
+    }
+    ul {
+      list-style: none;
+      padding-left: 0;
+    }
+    li {
+      background: #e6fffa;
+      margin: 10px 0;
+      padding: 12px;
+      border-radius: 6px;
+    }
+    img {
+      max-width: 100%;
+      margin-top: 10px;
+      border-radius: 6px;
+    }
+    .hashtags {
+      color: #2c7a7b;
+      font-size: 0.9em;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌱 Bếp Ăn Lành Mạnh</h1>
+  <p>Hãy góp món ăn lành mạnh bạn yêu thích 👇</p>
+  <input id="nickname" placeholder="Tên của bạn" /><br/>
+  <input id="food" placeholder="Tên món ăn lành mạnh" /><br/>
+  <input id="hashtags" placeholder="Hashtag (cách nhau bằng khoảng trắng, ví dụ: #ăn-chay #salad)" /><br/>
+  <input id="imageUrl" placeholder="Link hình ảnh món ăn (tùy chọn)" /><br/>
+  <button onclick="submitFood()">Góp món</button>
+
+  <h2>📋 Danh sách món ăn</h2>
+  <ul id="foodList"></ul>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyByco_VU4fcOWD0ruDdZuwg62e_zGVy8AE",
+      authDomain: "list-mon.firebaseapp.com",
+      projectId: "list-mon",
+      storageBucket: "list-mon.appspot.com",
+      messagingSenderId: "343647821245",
+      appId: "1:343647821245:web:4c51c30d1c15293ca146d4",
+      measurementId: "G-P62RDR65XG"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    async function submitFood() {
+      const nickname = document.getElementById("nickname").value.trim();
+      const food = document.getElementById("food").value.trim();
+      const hashtags = document.getElementById("hashtags").value.trim();
+      const imageUrl = document.getElementById("imageUrl").value.trim();
+      if (!nickname || !food) {
+        alert("Vui lòng nhập ít nhất tên và món ăn!");
+        return;
+      }
+
+      const existing = await db.collection("healthyFoods")
+        .where("food", "==", food)
+        .get();
+
+      if (!existing.empty) {
+        alert("Món này đã được góp trước đó rồi!");
+        return;
+      }
+
+      await db.collection("healthyFoods").add({
+        nickname,
+        food,
+        hashtags,
+        imageUrl,
+        createdAt: new Date()
+      });
+
+      document.getElementById("food").value = "";
+      document.getElementById("hashtags").value = "";
+      document.getElementById("imageUrl").value = "";
+      loadFoods();
+    }
+
+    async function loadFoods() {
+      const listEl = document.getElementById("foodList");
+      listEl.innerHTML = "";
+      const snapshot = await db.collection("healthyFoods").orderBy("createdAt", "desc").get();
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const li = document.createElement("li");
+        li.innerHTML = `<strong>${data.nickname}</strong>: ${data.food}`;
+        if (data.hashtags) {
+          li.innerHTML += `<br/><span class="hashtags">${data.hashtags}</span>`;
+        }
+        if (data.imageUrl) {
+          li.innerHTML += `<br/><img src="${data.imageUrl}" alt="${data.food}" />`;
+        }
+        listEl.appendChild(li);
+      });
+    }
+
+    loadFoods();
+  </script>
+</body>
+</html>
